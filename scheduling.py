@@ -8,7 +8,7 @@ from datetime import datetime
 import ast
 import math
 
-def HEFT(EST, EFT, pos, pscheduling, qlist, T, c_t, E, n, p,frequency,processorinfo, c_p,ccr):
+def HEFT(EST, EFT, pos, pscheduling, qlist, T, c_t, E, n, p,frequency,processorinfo, c_p):
     EA=0
     for idx, i in enumerate(qlist):
         if idx<pos:
@@ -32,7 +32,7 @@ def HEFT(EST, EFT, pos, pscheduling, qlist, T, c_t, E, n, p,frequency,processori
                 tmp = 0
                 for idx2, l in enumerate(pred):
                     if l==1:
-                        tmp = max(tmp,EFT[idx2][1]+c_t[idx2][i-1]*c_p[k][EFT[idx2][0]]*ccr)
+                        tmp = max(tmp,EFT[idx2][1]+c_t[idx2][i-1]*c_p[k][EFT[idx2][0]])
                         #print(c_p[k][EFT[idx2][0]])
                 tmp = max(tmp, pscheduling[k])
                 tmp2 = tmp+T[i-1][k]
@@ -48,7 +48,7 @@ def HEFT(EST, EFT, pos, pscheduling, qlist, T, c_t, E, n, p,frequency,processori
     return EA,EFT[qlist[-1]-1][1]
 
 
-def DUPRS1(EST, EFT, pos, pscheduling, qlist, T, c_t, E, n, p,latency,frequency,processorinfo,proc_freq,sl, c_p,ccr):
+def DUPRS1(EST, EFT, pos, pscheduling, qlist, T, c_t, E, n, p,latency,frequency,processorinfo,proc_freq,sl, c_p):
     EA = 0
     for idx, i in enumerate(qlist):
         ddl = EFT[i-1][1]*latency/sl
@@ -73,10 +73,10 @@ def DUPRS1(EST, EFT, pos, pscheduling, qlist, T, c_t, E, n, p,latency,frequency,
             pscheduling[proc]= EFT[i-1][1]
     
         EA = EA+p_energy
-        x,sl = HEFT(EST,EFT,idx+1,pscheduling.copy(),qlist,T,c_t,E,n,p,frequency,processorinfo,c_p,ccr)
+        x,sl = HEFT(EST,EFT,idx+1,pscheduling.copy(),qlist,T,c_t,E,n,p,frequency,processorinfo,c_)
     return EA, EFT[qlist[-1]-1][1]
 
-def DUPRS2(EST, EFT, pscheduling, qlist, T, c_t, E, n, p,frequency,processorinfo,proc_freq, c_p,ccr):
+def DUPRS2(EST, EFT, pscheduling, qlist, T, c_t, E, n, p,frequency,processorinfo,proc_freq, c_p):
     EA=0
     for idx, i  in reversed(list(enumerate(qlist))):
         if idx == len(qlist)-1:
@@ -84,7 +84,7 @@ def DUPRS2(EST, EFT, pscheduling, qlist, T, c_t, E, n, p,frequency,processorinfo
         ddl2 = math.inf
         for j in range(n):
             if E[j][i-1]==1:
-                ddl2=min(ddl2,EST[j][1]-c_t[i-1][j]*c_p[EST[j][0]][EST[i-1][0]]*ccr)
+                ddl2=min(ddl2,EST[j][1]-c_t[i-1][j]*c_p[EST[j][0]][EST[i-1][0]])
                 
         proc = EST[i-1][0]
         start = EST[i-1][1]
@@ -119,8 +119,8 @@ def DUPRS2(EST, EFT, pscheduling, qlist, T, c_t, E, n, p,frequency,processorinfo
 
 if __name__ == "__main__":
     time1 = datetime.now()
-    if len(sys.argv) != 10:
-        print("Usage: python scheduling.py <qlist> <T> <c_t> <Edges> <latency> <frequency> <processorinfo> <c_p> <ccr>")
+    if len(sys.argv) != 9:
+        print("Usage: python scheduling.py <qlist> <T> <c_t> <Edges> <latency> <frequency> <processorinfo> <c_p> ")
         sys.exit(1) 
 
     qlist = ast.literal_eval(sys.argv[1])
@@ -132,14 +132,13 @@ if __name__ == "__main__":
     #Energy = ast.literal_eval(sys.argv[7])
     processorinfo = ast.literal_eval(sys.argv[7])
     c_p = ast.literal_eval(sys.argv[8])
-    ccr = ast.literal_eval(sys.argv[9])
     n = len(qlist)
     p = len(T[0])
     EFT = [[None]*2 for _ in range(n)]
     EST = [[None]*2 for _ in range(n)]
     pscheduling = [0]*p
     
-    EA,sl = HEFT(EST,EFT,0,pscheduling,qlist,T,c_t,E,n,p,frequency,processorinfo,c_p,ccr)
+    EA,sl = HEFT(EST,EFT,0,pscheduling,qlist,T,c_t,E,n,p,frequency,processorinfo,c_p)
     print("Phase1: ")
     print("Energy consumption is: ",EA)
     print("scheduling length is: ",sl)
@@ -149,14 +148,14 @@ if __name__ == "__main__":
     proc_freq = [0]*n
     pscheduling = [0]*p
 
-    EA, sl = DUPRS1(EST,EFT,0,pscheduling,qlist,T,c_t,E,n,p,latency,frequency,processorinfo,proc_freq,sl, c_p,ccr)
+    EA, sl = DUPRS1(EST,EFT,0,pscheduling,qlist,T,c_t,E,n,p,latency,frequency,processorinfo,proc_freq,sl, c_p)
     print("Phase2: ")
     print("Energy consumption is: ",EA)
     print("scheduling length is: ",sl)
     #print("EST is: ",EST)
     #print("EFT is: ",EFT)
 
-    EA, sl = DUPRS2(EST,EFT,pscheduling,qlist,T,c_t,E,n,p,frequency,processorinfo,proc_freq,c_p,ccr)
+    EA, sl = DUPRS2(EST,EFT,pscheduling,qlist,T,c_t,E,n,p,frequency,processorinfo,proc_freq,c_p)
     print("Phase3: ")
     print("Energy consumption is: ",EA)
     print("scheduling length is: ",sl)
